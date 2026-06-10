@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>가계부 - 비상금 관리</title>
+  <link rel="stylesheet" href="household-budget.css?v=7">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="app-icon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#2563eb">
+  <script src="household-budget-db.js?v=7"></script>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">
+          <h1>가계부</h1>
+          <p>정산월 기준 관리</p>
+        </div>
+        <label class="global-month">
+          <span>정산월</span>
+          <select name="globalSettlementMonth" aria-label="정산월 선택">
+            <option>2026년 12월</option>
+            <option>2026년 11월</option>
+            <option>2026년 10월</option>
+            <option>2026년 9월</option>
+            <option>2026년 8월</option>
+            <option selected>2026년 7월</option>
+            <option>2026년 6월</option>
+            <option>2026년 5월</option>
+            <option>2026년 4월</option>
+            <option>2026년 3월</option>
+            <option>2026년 2월</option>
+            <option>2026년 1월</option>
+          </select>
+        </label>
+      </div>
+      <nav class="nav">
+        <a href="household-budget-planning.html">대시보드</a>
+        <a href="expense-management.html">지출 관리</a>
+        <a href="budget-management.html">예산 관리</a>
+        <a href="loan-management.html">대출 관리</a>
+        <a class="active" href="reserve-management.html">비상금 관리</a>
+        <a href="database-management.html">DB 관리</a>
+      </nav>
+    </aside>
+    <div class="content">
+      <header class="topbar">
+        <div><h2>비상금 관리</h2></div>
+      </header>
+      <main>
+        <div class="toolbar">
+          <div class="toolbar-total">
+            <span>비상금 잔액</span>
+            <strong>₩1,735,857</strong>
+          </div>
+          <button class="button primary" id="openReserveModal">비상금 등록</button>
+        </div>
+        <div class="grid">
+          <section class="card span-12">
+            <h3>입출금 내역</h3>
+            <table>
+              <thead><tr><th>일자</th><th>유형</th><th>항목</th><th class="amount">금액</th><th class="amount">잔액</th></tr></thead>
+              <tbody>
+                <tr><td>7/18</td><td><span class="badge red">지출</span></td><td>가전 수리</td><td class="amount">-₩120,000</td><td class="amount">₩1,735,857</td></tr>
+                <tr><td>7/5</td><td><span class="badge green">수입</span></td><td>현금 보관</td><td class="amount">₩200,000</td><td class="amount">₩1,855,857</td></tr>
+                <tr><td>6/20</td><td><span class="badge red">지출</span></td><td>병원비</td><td class="amount">-₩80,000</td><td class="amount">₩1,655,857</td></tr>
+              </tbody>
+            </table>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="reserveModal" aria-hidden="true">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="reserveModalTitle">
+      <div class="modal-head">
+        <h3 id="reserveModalTitle">비상금 등록</h3>
+        <button class="button reserve-modal-close">닫기</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div>
+            <label for="reserveType">유형</label>
+            <select class="control" id="reserveType">
+              <option value="">선택</option>
+              <option>수입</option>
+              <option>지출</option>
+            </select>
+          </div>
+          <div>
+            <label for="reserveTitle">항목</label>
+            <input class="control" id="reserveTitle">
+          </div>
+          <div>
+            <label for="reserveAmount">금액</label>
+            <input class="control" id="reserveAmount">
+          </div>
+          <div>
+            <label for="reserveDate">일자</label>
+            <input class="control" id="reserveDate" type="date">
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="button reserve-modal-close">취소</button>
+        <button class="button primary">저장</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const reserveModal = document.getElementById("reserveModal");
+    const formatCurrency = (value) => `₩${Math.round(Number(value) || 0).toLocaleString("ko-KR")}`;
+    const formatDateShort = (value) => {
+      const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      return match ? `${Number(match[2])}/${Number(match[3])}` : value;
+    };
+    const escapeHtml = (value) => String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+    const renderReservePage = (snapshot) => {
+      const rows = [...snapshot.rows.reserve_entries].sort((a, b) => String(a.entry_date).localeCompare(String(b.entry_date)));
+      let balance = 0;
+      const computed = rows.map((row) => {
+        const amount = Number(row.amount) || 0;
+        balance += row.entry_type === "expense" ? -amount : amount;
+        return { ...row, balance };
+      }).reverse();
+      document.querySelector(".toolbar-total strong").textContent = formatCurrency(balance);
+      const body = document.querySelector("table tbody");
+      if (!body) return;
+      body.innerHTML = computed.length
+        ? computed.map((row) => {
+            const isExpense = row.entry_type === "expense";
+            const typeLabel = isExpense ? "지출" : "수입";
+            const amount = `${isExpense ? "-" : ""}${formatCurrency(row.amount)}`;
+            return `<tr><td>${formatDateShort(row.entry_date)}</td><td><span class="badge ${isExpense ? "red" : "green"}">${typeLabel}</span></td><td>${escapeHtml(row.title)}</td><td class="amount">${amount}</td><td class="amount">${formatCurrency(row.balance)}</td></tr>`;
+          }).join("")
+        : `<tr><td colspan="5" class="empty-cell">등록된 비상금 내역이 없습니다.</td></tr>`;
+    };
+
+    document.getElementById("openReserveModal").addEventListener("click", () => {
+      document.getElementById("reserveType").value = "";
+      document.getElementById("reserveTitle").value = "";
+      document.getElementById("reserveAmount").value = "";
+      document.getElementById("reserveDate").value = "";
+      reserveModal.classList.add("open");
+      reserveModal.setAttribute("aria-hidden", "false");
+    });
+    document.querySelectorAll(".reserve-modal-close").forEach((button) => {
+      button.addEventListener("click", () => {
+        reserveModal.classList.remove("open");
+        reserveModal.setAttribute("aria-hidden", "true");
+      });
+    });
+    reserveModal.addEventListener("click", (event) => {
+      if (event.target === reserveModal) {
+        reserveModal.classList.remove("open");
+        reserveModal.setAttribute("aria-hidden", "true");
+      }
+    });
+    window.HouseholdBudgetDB?.hydratePage(renderReservePage);
+  </script>
+<div class="modal-backdrop" id="deleteConfirmModal" aria-hidden="true">
+  <section class="modal confirm-modal" role="dialog" aria-modal="true" aria-labelledby="deleteConfirmTitle">
+    <div class="modal-head">
+      <h3 id="deleteConfirmTitle">삭제 확인</h3>
+      <button class="button delete-confirm-close" type="button">닫기</button>
+    </div>
+    <div class="modal-body">
+      <p class="note" id="deleteConfirmMessage">선택한 항목을 삭제할까요?</p>
+    </div>
+    <div class="modal-actions">
+      <button class="button delete-confirm-close" type="button">취소</button>
+      <button class="button danger" type="button" id="deleteConfirmAction">삭제</button>
+    </div>
+  </section>
+</div>
+
+<script>
+  (() => {
+    const deleteConfirmModal = document.getElementById("deleteConfirmModal");
+    const deleteConfirmMessage = document.getElementById("deleteConfirmMessage");
+    const closeDeleteConfirm = () => {
+      deleteConfirmModal.classList.remove("open");
+      deleteConfirmModal.setAttribute("aria-hidden", "true");
+    };
+
+    document.querySelectorAll("[data-confirm-delete]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const label = button.dataset.deleteLabel || "항목";
+        deleteConfirmMessage.textContent = `${label}을 삭제할까요?`;
+        deleteConfirmModal.classList.add("open");
+        deleteConfirmModal.setAttribute("aria-hidden", "false");
+      });
+    });
+
+    document.querySelectorAll(".delete-confirm-close").forEach((button) => {
+      button.addEventListener("click", closeDeleteConfirm);
+    });
+
+    document.getElementById("deleteConfirmAction").addEventListener("click", closeDeleteConfirm);
+    deleteConfirmModal.addEventListener("click", (event) => {
+      if (event.target === deleteConfirmModal) closeDeleteConfirm();
+    });
+  })();
+</script>
+</body>
+</html>

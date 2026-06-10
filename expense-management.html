@@ -8,7 +8,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="app-icon.svg" type="image/svg+xml">
   <meta name="theme-color" content="#2563eb">
-  <script src="household-budget-db.js?v=7"></script>
+  <script src="household-budget-db.js?v=8"></script>
 </head>
 <body>
   <div class="shell">
@@ -343,6 +343,19 @@
         || (parsed.year === currentSettlementMonth.year && parsed.month > currentSettlementMonth.month);
     }
 
+    function previousSettlementMonth(month) {
+      const match = String(month || "").match(/^(\d{4})-(\d{2})$/);
+      if (!match) return "";
+      const date = new Date(Number(match[1]), Number(match[2]) - 2, 1);
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    }
+
+    async function refreshExpensePage() {
+      if (window.HouseholdBudgetDB?.getApiUrl()) {
+        await HouseholdBudgetDB.refreshPage();
+      }
+    }
+
     function syncResetVariableExpenseVisibility() {
       resetVariableExpensesButton.classList.toggle(
         "is-hidden",
@@ -377,11 +390,26 @@
     });
 
     document.getElementById("copyFixedExpenseMonth").addEventListener("click", () => {
+      const targetMonth = HouseholdBudgetDB.parseKoreanMonth(getSelectedSettlementMonth());
+      const sourceMonth = previousSettlementMonth(targetMonth);
       openMonthAction({
         title: "고정지출 불러오기",
-        message: `${getSelectedSettlementMonth()}에 이전 정산월의 고정 지출 항목과 금액을 동일하게 세팅합니다. 이미 수정한 고정 지출은 덮어쓰기 전에 비교 대상으로 표시하는 구조입니다.`,
+        message: `${getSelectedSettlementMonth()}에 이전 정산월의 고정 지출 항목과 금액을 동일하게 세팅합니다.`,
         action: async () => {
-          document.getElementById("copyFixedExpenseMonth").textContent = "고정지출 세팅 완료";
+          const button = document.getElementById("copyFixedExpenseMonth");
+          button.disabled = true;
+          button.textContent = "불러오는 중";
+          try {
+            if (!sourceMonth || !targetMonth) throw new Error("정산월을 확인할 수 없습니다.");
+            if (window.HouseholdBudgetDB?.getApiUrl()) {
+              await HouseholdBudgetDB.cloneFixedMonth(sourceMonth, targetMonth);
+              await refreshExpensePage();
+            }
+            button.textContent = "고정지출 불러오기";
+          } finally {
+            button.textContent = "고정지출 불러오기";
+            button.disabled = false;
+          }
         }
       });
     });
@@ -392,16 +420,26 @@
         message: `${getSelectedSettlementMonth()}에 테스트로 입력한 변동 지출만 일괄 삭제합니다. 고정 지출, 고정 예산, 추가 예산, 할부 원본 데이터는 유지됩니다.`,
         danger: true,
         action: async () => {
-          if (window.HouseholdBudgetDB?.getApiUrl()) {
-            await HouseholdBudgetDB.resetVariableExpenses(HouseholdBudgetDB.parseKoreanMonth(getSelectedSettlementMonth()));
+          const button = document.getElementById("resetVariableExpenses");
+          button.disabled = true;
+          button.textContent = "초기화 중";
+          try {
+            if (window.HouseholdBudgetDB?.getApiUrl()) {
+              await HouseholdBudgetDB.resetVariableExpenses(HouseholdBudgetDB.parseKoreanMonth(getSelectedSettlementMonth()));
+              await refreshExpensePage();
+            }
+          } finally {
+            button.textContent = "변동지출 초기화";
+            button.disabled = false;
           }
-          document.querySelectorAll(".variable-expense-row").forEach((row) => row.remove());
-          document.querySelectorAll("[data-show-more-expenses]").forEach((button) => button.classList.add("is-hidden"));
         }
       });
     });
 
-    settlementMonthSelect?.addEventListener("change", syncResetVariableExpenseVisibility);
+    settlementMonthSelect?.addEventListener("change", async () => {
+      syncResetVariableExpenseVisibility();
+      await refreshExpensePage();
+    });
     syncResetVariableExpenseVisibility();
 
     function openExpenseModal() {

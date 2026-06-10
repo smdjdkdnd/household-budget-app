@@ -109,6 +109,9 @@
 
   async function post(action, payload = {}) {
     assertApiUrl();
+    if (location.protocol === "file:" && ["cloneFixedMonth", "resetVariableExpenses"].includes(action)) {
+      return get(action, payload);
+    }
     return request(CONFIG.apiUrl, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -174,23 +177,35 @@
     }
   }
 
+  function clearCachedSnapshot(settlementMonth = getSelectedSettlementMonthValue()) {
+    try {
+      localStorage.removeItem(snapshotCacheKey(settlementMonth));
+    } catch (error) {
+      // Ignore cache cleanup failures.
+    }
+  }
+
   function list(table, filters = {}) {
     return get("list", { table, ...filters });
   }
 
   function upsert(table, row) {
+    if (row?.settlement_month) clearCachedSnapshot(row.settlement_month);
     return post("upsert", { table, row });
   }
 
   function remove(table, id) {
+    clearCachedSnapshot();
     return post("delete", { table, id });
   }
 
   function cloneFixedMonth(sourceMonth, targetMonth) {
+    clearCachedSnapshot(targetMonth);
     return post("cloneFixedMonth", { source_month: sourceMonth, target_month: targetMonth });
   }
 
   function resetVariableExpenses(settlementMonth) {
+    clearCachedSnapshot(settlementMonth);
     return post("resetVariableExpenses", { settlement_month: settlementMonth });
   }
 
@@ -286,6 +301,11 @@
     }
   }
 
+  function refreshPage() {
+    clearCachedSnapshot(getSelectedSettlementMonthValue());
+    return hydratePage(window.__householdBudgetSnapshotHandler);
+  }
+
   window.HouseholdBudgetDB = {
     CONFIG,
     TABLES,
@@ -299,6 +319,7 @@
     remove,
     cloneFixedMonth,
     resetVariableExpenses,
+    refreshPage,
     parseKoreanMonth,
     getSelectedSettlementMonthValue,
     formatWon,

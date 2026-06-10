@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>가계부 - 대출 관리</title>
+  <link rel="stylesheet" href="household-budget.css?v=9">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="app-icon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#2563eb">
+  <script src="household-budget-db.js?v=16"></script>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">
+          <h1>가계부</h1>
+          <p>정산월 기준 관리</p>
+        </div>
+        <label class="global-month">
+          <span>정산월</span>
+          <select name="globalSettlementMonth" aria-label="정산월 선택">
+            <option>2026년 12월</option>
+            <option>2026년 11월</option>
+            <option>2026년 10월</option>
+            <option>2026년 9월</option>
+            <option>2026년 8월</option>
+            <option selected>2026년 7월</option>
+            <option>2026년 6월</option>
+            <option>2026년 5월</option>
+            <option>2026년 4월</option>
+            <option>2026년 3월</option>
+            <option>2026년 2월</option>
+            <option>2026년 1월</option>
+          </select>
+        </label>
+      </div>
+      <nav class="nav">
+        <a href="household-budget-planning.html">대시보드</a>
+        <a href="expense-management.html">지출 관리</a>
+        <a href="budget-management.html">예산 관리</a>
+        <a class="active" href="loan-management.html">대출 관리</a>
+        <a href="reserve-management.html">비상금 관리</a>
+        <a href="database-management.html">DB 관리</a>
+      </nav>
+    </aside>
+    <div class="content">
+      <header class="topbar">
+        <div><h2>대출 관리</h2></div>
+      </header>
+      <main>
+        <div class="toolbar">
+          <div class="toolbar-total">
+            <span>예상 월 상환 합계</span>
+            <strong id="loanPaymentTotal">₩1,062,746</strong>
+          </div>
+          <button class="button primary loan-modal-open">대출 등록</button>
+        </div>
+        <div class="grid">
+          <section class="card span-12">
+            <div class="card-head">
+              <h3>대출 원장</h3>
+              <div class="card-head-actions">
+                <select class="control" id="loanBankFilter" aria-label="금융사 필터">
+                  <option value="all">전체 금융사</option>
+                </select>
+                <span class="total-pill">잔여 원금 <strong id="loanBalanceTotal">₩54,273,848</strong></span>
+              </div>
+            </div>
+            <div class="table-scroll">
+              <table class="loan-table">
+                <colgroup>
+                  <col class="loan-col-name">
+                  <col class="loan-col-bank">
+                  <col class="loan-col-payment">
+                  <col class="loan-col-status">
+                  <col class="loan-col-date">
+                  <col class="loan-col-principal">
+                  <col class="loan-col-rate">
+                  <col class="loan-col-end">
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th>항목</th>
+                    <th>금융</th>
+                    <th class="amount">월상환</th>
+                    <th>상태</th>
+                    <th>실행일</th>
+                    <th class="amount">원금</th>
+                    <th>이율</th>
+                    <th>종료월</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="loan-row" data-bank="국민" data-principal="27200000" data-rate="3.9" data-start="2023-06-15" data-end="2028-05" data-type="원리금균등">
+                    <td>토레봉</td>
+                    <td>국민</td>
+                    <td class="amount">
+                      <div class="loan-payment">
+                        <div class="loan-payment-main">
+                          <span class="badge blue" data-loan-type>원리금</span>
+                          <strong data-loan-payment>₩499,703</strong>
+                        </div>
+                        <span data-loan-split>원 ₩463,768 / 이 ₩35,935</span>
+                      </div>
+                    </td>
+                    <td><span class="badge green">진행</span></td>
+                    <td>2023-06-15</td>
+                    <td class="amount">₩27,200,000</td>
+                    <td>3.9%</td>
+                    <td>2028-05</td>
+                  </tr>
+                  <tr class="loan-row" data-bank="토스" data-principal="14000000" data-rate="6.15" data-start="2024-07-10" data-end="2033-07" data-type="원리금균등">
+                    <td>신용대출</td>
+                    <td>토스</td>
+                    <td class="amount">
+                      <div class="loan-payment">
+                        <div class="loan-payment-main">
+                          <span class="badge blue" data-loan-type>원리금</span>
+                          <strong data-loan-payment>₩167,959</strong>
+                        </div>
+                        <span data-loan-split>원 ₩108,767 / 이 ₩59,192</span>
+                      </div>
+                    </td>
+                    <td><span class="badge green">진행</span></td>
+                    <td>2024-07-10</td>
+                    <td class="amount">₩14,000,000</td>
+                    <td>6.15%</td>
+                    <td>2033-07</td>
+                  </tr>
+                  <tr class="loan-row" data-bank="경남" data-principal="35000000" data-rate="6.5" data-start="2025-07-01" data-end="2035-07" data-type="원리금균등">
+                    <td>신용대출</td>
+                    <td>경남</td>
+                    <td class="amount">
+                      <div class="loan-payment">
+                        <div class="loan-payment-main">
+                          <span class="badge blue" data-loan-type>원리금</span>
+                          <strong data-loan-payment>₩395,084</strong>
+                        </div>
+                        <span data-loan-split>원 ₩219,264 / 이 ₩175,821</span>
+                      </div>
+                    </td>
+                    <td><span class="badge green">진행</span></td>
+                    <td>2025-07-01</td>
+                    <td class="amount">₩35,000,000</td>
+                    <td>6.5%</td>
+                    <td>2035-07</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="loanModal" aria-hidden="true">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="loanModalTitle">
+      <div class="modal-head">
+        <h3 id="loanModalTitle">대출 등록/편집</h3>
+        <button class="button loan-modal-close">닫기</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div>
+            <label for="loanName">항목</label>
+            <input class="control" id="loanName">
+          </div>
+          <div>
+            <label for="loanBank">금융기관</label>
+            <select class="control" id="loanBank">
+              <option value="">선택</option>
+            </select>
+          </div>
+          <div>
+            <label for="loanStartDate">실행일</label>
+            <input class="control" id="loanStartDate" type="date">
+          </div>
+          <div>
+            <label for="loanTermMonths">대출 기간</label>
+            <input class="control" id="loanTermMonths" placeholder="예: 60개월">
+          </div>
+          <div>
+            <label for="loanPrincipal">대출 원금</label>
+            <input class="control" id="loanPrincipal">
+          </div>
+          <div>
+            <label for="loanRate">이율</label>
+            <input class="control" id="loanRate">
+          </div>
+          <div>
+            <label for="loanPaymentType">상환방식</label>
+            <select class="control" id="loanPaymentType">
+              <option value="">선택</option>
+              <option>원리금균등</option>
+              <option>원금균등</option>
+              <option>만기일시</option>
+            </select>
+          </div>
+          <div>
+            <label for="loanStatus">상태</label>
+            <select class="control" id="loanStatus">
+              <option value="">선택</option>
+              <option>진행</option>
+              <option>상환 완료</option>
+              <option>상환 예정</option>
+            </select>
+          </div>
+          <div>
+            <label for="loanWithdrawBank">출금 은행</label>
+            <select class="control" id="loanWithdrawBank">
+              <option value="">선택</option>
+            </select>
+          </div>
+          <div>
+            <label for="loanActualPayment">실제 월상환액</label>
+            <input class="control" id="loanActualPayment" placeholder="자동 계산과 다를 때만 입력">
+          </div>
+          <div class="conditional-panel loan-calculation-panel">
+            <div class="card-head">
+              <h3>자동 계산 결과</h3>
+              <span class="total-pill">입력 제외</span>
+            </div>
+            <div class="loan-calc-grid">
+              <div>
+                <span>상환 기간</span>
+                <strong id="loanCalcMonths">-</strong>
+              </div>
+              <div>
+                <span>종료월</span>
+                <strong id="loanCalcEndMonth">-</strong>
+              </div>
+              <div>
+                <span>회차</span>
+                <strong id="loanCalcRound">-</strong>
+              </div>
+              <div>
+                <span>월 상환 총액</span>
+                <strong id="loanCalcPayment">-</strong>
+              </div>
+              <div>
+                <span>이번 달 원금</span>
+                <strong id="loanCalcPrincipal">-</strong>
+              </div>
+              <div>
+                <span>이번 달 이자</span>
+                <strong id="loanCalcInterest">-</strong>
+              </div>
+              <div>
+                <span>상환 후 잔액</span>
+                <strong id="loanCalcBalance">-</strong>
+              </div>
+            </div>
+            <p class="note">종료월, 월 상환 총액, 이번 달 원금, 이번 달 이자는 입력받지 않고 실행일/대출 기간/원금/이율/상환방식으로 자동 계산합니다.</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="button danger loan-delete-button" type="button" data-confirm-delete data-delete-label="대출 항목">삭제</button>
+        <button class="button primary">저장</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const loanModal = document.getElementById('loanModal');
+    const loanDeleteButton = document.querySelector('.loan-delete-button');
+    const loanBankFilter = document.getElementById('loanBankFilter');
+    const loanMasterData = {
+      loanCompanies: ['국민', '토스', '경남'],
+      bankAccounts: ['국민', '카카오', '토스']
+    };
+    let latestLoanSnapshot = null;
+    let currentLoanEdit = null;
+    const moneyFormat = new Intl.NumberFormat('ko-KR');
+    const parseMoney = (value) => Number(String(value).replace(/[^0-9.-]/g, '')) || 0;
+    const parseRate = (value) => (Number(String(value).replace(/[^0-9.-]/g, '')) || 0) / 100 / 12;
+    const parseYearMonth = (value) => {
+      const match = String(value).match(/(\d{4})\D*(\d{1,2})/);
+      return match ? { year: Number(match[1]), month: Number(match[2]) } : null;
+    };
+    const monthsBetween = (start, end) => {
+      if (!start || !end) return 0;
+      return (end.year - start.year) * 12 + end.month - start.month + 1;
+    };
+    const parseLoanTermMonths = (value) => Number(String(value).replace(/[^0-9]/g, '')) || 0;
+    const addMonths = (start, monthsToAdd) => {
+      if (!start || monthsToAdd < 0 || Number.isNaN(monthsToAdd)) return null;
+      const totalMonths = start.year * 12 + (start.month - 1) + monthsToAdd;
+      return {
+        year: Math.floor(totalMonths / 12),
+        month: (totalMonths % 12) + 1
+      };
+    };
+    const formatYearMonth = (value) => value ? `${value.year}-${String(value.month).padStart(2, '0')}` : '-';
+    const formatWon = (value) => `₩${moneyFormat.format(Math.max(0, Math.round(value)))}`;
+    const getTypeLabel = (type) => {
+      if (type === '원금균등') return '원금';
+      if (type === '만기일시') return '만기';
+      return '원리금';
+    };
+    const toOptions = (items) => items.map((item) => `<option value="${item}">${item}</option>`).join('');
+    const syncLoanDbOptions = () => {
+      loanBankFilter.innerHTML = `<option value="all">전체 금융사</option>${toOptions(loanMasterData.loanCompanies)}`;
+      document.getElementById('loanBank').innerHTML = `<option value="">선택</option>${toOptions(loanMasterData.loanCompanies)}`;
+      document.getElementById('loanWithdrawBank').innerHTML = `<option value="">선택</option>${toOptions(loanMasterData.bankAccounts)}`;
+    };
+    const escapeHtml = (value) => String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+    const lookupBy = (rows, idKey, valueKey = 'name') => rows.reduce((lookup, row) => {
+      lookup[row[idKey]] = row[valueKey];
+      return lookup;
+    }, {});
+    const repaymentTypeLabel = (type) => {
+      if (type === 'equal_principal_interest') return '원리금균등';
+      if (type === 'equal_principal') return '원금균등';
+      if (type === 'interest_only') return '만기일시';
+      return '원리금균등';
+    };
+    const repaymentTypeValue = (label) => {
+      if (label === '원금균등') return 'equal_principal';
+      if (label === '만기일시') return 'interest_only';
+      return 'equal_principal_interest';
+    };
+    const statusLabel = (status) => status === '사용' ? '진행' : (status || '진행');
+    const statusValue = (label) => label === '상환 완료' ? '중지' : '사용';
+    const actualPaymentFromMemo = (memo) => {
+      const match = String(memo || '').match(/(?:보정월상환|월상환)\s*([0-9,]+)/);
+      return match ? Number(match[1].replace(/,/g, '')) : 0;
+    };
+    const mergeActualPaymentMemo = (memo, amount) => {
+      const cleaned = String(memo || '').replace(/(?:^|\s*)보정월상환\s*[0-9,]+/g, '').trim();
+      return amount ? `${cleaned ? `${cleaned} ` : ''}보정월상환 ${Math.round(amount)}` : cleaned;
+    };
+    const annualRatePercent = (value) => {
+      const rate = Number(value) || 0;
+      return rate < 1 ? rate * 100 : rate;
+    };
+    const endMonthFromLoan = (loan) => {
+      const memoMatch = String(loan.memo || '').match(/종료월\s*(\d{4}-\d{2})/);
+      if (memoMatch) return memoMatch[1];
+      const start = parseYearMonth(loan.start_date);
+      const term = Number(loan.term_months) || 0;
+      return formatYearMonth(addMonths(start, term - 1));
+    };
+    const loanRowMarkup = (loan, companyLookup) => {
+      const bank = companyLookup[loan.loan_company_id] || loan.loan_company_id || '-';
+      const rate = annualRatePercent(loan.annual_rate);
+      const type = repaymentTypeLabel(loan.repayment_type);
+      const end = endMonthFromLoan(loan);
+      const actualPayment = actualPaymentFromMemo(loan.memo);
+      return `
+        <tr class="loan-row" data-id="${escapeHtml(loan.loan_id || '')}" data-bank="${escapeHtml(bank)}" data-principal="${Number(loan.principal) || 0}" data-rate="${rate}" data-start="${escapeHtml(loan.start_date)}" data-end="${escapeHtml(end)}" data-type="${type}" data-actual-payment="${actualPayment}">
+          <td><button class="link-button loan-edit-trigger" type="button">${escapeHtml(loan.title)}</button></td>
+          <td>${escapeHtml(bank)}</td>
+          <td class="amount">
+            <div class="loan-payment">
+              <div class="loan-payment-main">
+                <span class="badge blue" data-loan-type>${getTypeLabel(type)}</span>
+                <strong data-loan-payment>-</strong>
+              </div>
+              <span data-loan-split>정산월 상환 없음</span>
+            </div>
+          </td>
+          <td><span class="badge green">${escapeHtml(statusLabel(loan.status))}</span></td>
+          <td>${escapeHtml(loan.start_date)}</td>
+          <td class="amount">${formatWon(Number(loan.principal) || 0)}</td>
+          <td>${rate}%</td>
+          <td>${escapeHtml(end)}</td>
+        </tr>
+      `;
+    };
+    const renderLoanPage = (snapshot) => {
+      latestLoanSnapshot = snapshot;
+      const companyLookup = lookupBy(snapshot.master.loan_companies, 'loan_company_id');
+      loanMasterData.loanCompanies = snapshot.master.loan_companies.map((company) => company.name);
+      loanMasterData.bankAccounts = snapshot.master.bank_accounts.map((bank) => bank.name);
+      syncLoanDbOptions();
+      const body = document.querySelector('.loan-table tbody');
+      if (body) body.innerHTML = snapshot.rows.loans.map((loan) => loanRowMarkup(loan, companyLookup)).join('');
+      updateLoanLedger();
+    };
+    const getGlobalSettlementMonth = () => {
+      const selected = document.querySelector('.global-month select')?.value;
+      const match = String(selected).match(/(\d{4})년\s*(\d{1,2})월/);
+      return match ? { year: Number(match[1]), month: Number(match[2]) } : parseYearMonth(document.getElementById('loanStartDate')?.value);
+    };
+    const calculateLoan = ({ principal, monthlyRate, start, end, settlement, type }) => {
+      const months = monthsBetween(start, end);
+      const rawRound = monthsBetween(start, settlement);
+      const round = Math.min(Math.max(rawRound, 0), months || 0);
+      let payment = 0;
+      let principalPart = 0;
+      let interestPart = 0;
+      let balance = principal;
+
+      if (principal && months && rawRound >= 1 && rawRound <= months) {
+        if (type === '원금균등') {
+          principalPart = principal / months;
+          interestPart = Math.max(0, principal - principalPart * (round - 1)) * monthlyRate;
+          payment = principalPart + interestPart;
+          balance = principal - principalPart * round;
+        } else if (type === '만기일시') {
+          interestPart = principal * monthlyRate;
+          principalPart = round === months ? principal : 0;
+          payment = principalPart + interestPart;
+          balance = round === months ? 0 : principal;
+        } else {
+          payment = monthlyRate === 0 ? principal / months : principal * monthlyRate / (1 - (1 + monthlyRate) ** -months);
+          balance = principal;
+          for (let index = 1; index <= round; index += 1) {
+            interestPart = balance * monthlyRate;
+            principalPart = payment - interestPart;
+            balance -= principalPart;
+          }
+        }
+      }
+
+      if (principal && months && rawRound > months) {
+        balance = 0;
+      }
+
+      return { months, round, payment, principalPart, interestPart, balance };
+    };
+    const updateLoanLedger = () => {
+      const settlement = getGlobalSettlementMonth();
+      const selectedBank = loanBankFilter?.value || 'all';
+      let paymentTotal = 0;
+      let balanceTotal = 0;
+
+      document.querySelectorAll('.loan-row').forEach((row) => {
+        const matchesBank = selectedBank === 'all' || row.dataset.bank === selectedBank;
+        row.classList.toggle('is-hidden', !matchesBank);
+        const result = calculateLoan({
+          principal: parseMoney(row.dataset.principal),
+          monthlyRate: parseRate(row.dataset.rate),
+          start: parseYearMonth(row.dataset.start),
+          end: parseYearMonth(row.dataset.end),
+          settlement,
+          type: row.dataset.type
+        });
+
+        if (matchesBank) {
+          paymentTotal += parseMoney(row.dataset.actualPayment) || result.payment;
+          balanceTotal += result.balance;
+        }
+        const actualPayment = parseMoney(row.dataset.actualPayment);
+        const displayPayment = actualPayment || result.payment;
+        row.querySelector('[data-loan-type]').textContent = getTypeLabel(row.dataset.type);
+        row.querySelector('[data-loan-payment]').textContent = displayPayment ? formatWon(displayPayment) : '-';
+        row.querySelector('[data-loan-split]').textContent = displayPayment
+          ? (actualPayment ? `보정값 적용 / 계산 ${formatWon(result.payment)}` : `원 ${formatWon(result.principalPart)} / 이 ${formatWon(result.interestPart)}`)
+          : '정산월 상환 없음';
+      });
+
+      document.getElementById('loanPaymentTotal').textContent = formatWon(paymentTotal);
+      document.getElementById('loanBalanceTotal').textContent = formatWon(balanceTotal);
+    };
+    const updateLoanCalculation = () => {
+      const principal = parseMoney(document.getElementById('loanPrincipal')?.value);
+      const start = parseYearMonth(document.getElementById('loanStartDate')?.value);
+      const termMonths = parseLoanTermMonths(document.getElementById('loanTermMonths')?.value);
+      const end = addMonths(start, termMonths - 1);
+      const result = calculateLoan({
+        principal,
+        monthlyRate: parseRate(document.getElementById('loanRate')?.value),
+        start,
+        end,
+        settlement: getGlobalSettlementMonth(),
+        type: document.getElementById('loanPaymentType')?.value
+      });
+
+      document.getElementById('loanCalcMonths').textContent = result.months ? `${result.months}개월` : '-';
+      document.getElementById('loanCalcEndMonth').textContent = formatYearMonth(end);
+      document.getElementById('loanCalcRound').textContent = result.months ? `${result.round}/${result.months}회차` : '-';
+      document.getElementById('loanCalcPayment').textContent = result.payment ? formatWon(result.payment) : '-';
+      document.getElementById('loanCalcPrincipal').textContent = result.principalPart ? formatWon(result.principalPart) : '-';
+      document.getElementById('loanCalcInterest').textContent = result.interestPart ? formatWon(result.interestPart) : '-';
+      document.getElementById('loanCalcBalance').textContent = principal ? formatWon(result.balance) : '-';
+    };
+
+    const setLoanSelectValue = (select, value) => {
+      if (!select) return;
+      const option = Array.from(select.options).find((item) => item.value === value || item.textContent.trim() === value);
+      if (option) select.value = option.value;
+    };
+    const findMasterIdByName = (rows, idKey, name) => {
+      const normalized = String(name || '').trim();
+      return rows.find((row) => row.name === normalized || row[idKey] === normalized)?.[idKey] || normalized;
+    };
+
+    const resetLoanModalForCreate = () => {
+      currentLoanEdit = null;
+      document.getElementById('loanModalTitle').textContent = '대출 등록';
+      document.getElementById('loanName').value = '';
+      setLoanSelectValue(document.getElementById('loanBank'), '');
+      document.getElementById('loanStartDate').value = '';
+      document.getElementById('loanTermMonths').value = '';
+      document.getElementById('loanPrincipal').value = '';
+      document.getElementById('loanRate').value = '';
+      document.getElementById('loanActualPayment').value = '';
+      setLoanSelectValue(document.getElementById('loanPaymentType'), '');
+      setLoanSelectValue(document.getElementById('loanStatus'), '');
+      setLoanSelectValue(document.getElementById('loanWithdrawBank'), '');
+      loanDeleteButton.classList.add('is-hidden');
+      updateLoanCalculation();
+    };
+    const openLoanModal = () => {
+      loanModal.classList.add('open');
+      loanModal.setAttribute('aria-hidden', 'false');
+    };
+    const closeLoanModal = () => {
+      loanModal.classList.remove('open');
+      loanModal.setAttribute('aria-hidden', 'true');
+    };
+    const fillLoanModalFromRow = (button) => {
+      const row = button.closest('.loan-row');
+      const id = row.dataset.id || '';
+      const source = latestLoanSnapshot?.rows.loans.find((loan) => loan.loan_id === id);
+      currentLoanEdit = { id, source };
+      document.getElementById('loanModalTitle').textContent = '대출 편집';
+      document.getElementById('loanName').value = source?.title || button.textContent.trim();
+      setLoanSelectValue(document.getElementById('loanBank'), row.dataset.bank);
+      document.getElementById('loanStartDate').value = source?.start_date || row.dataset.start || '';
+      document.getElementById('loanTermMonths').value = source?.term_months || monthsBetween(parseYearMonth(row.dataset.start), parseYearMonth(row.dataset.end));
+      document.getElementById('loanPrincipal').value = source?.principal || row.dataset.principal || '';
+      document.getElementById('loanRate').value = annualRatePercent(source?.annual_rate || row.dataset.rate);
+      document.getElementById('loanActualPayment').value = actualPaymentFromMemo(source?.memo);
+      setLoanSelectValue(document.getElementById('loanPaymentType'), row.dataset.type);
+      setLoanSelectValue(document.getElementById('loanStatus'), statusLabel(source?.status));
+      const bankLookup = lookupBy(latestLoanSnapshot?.master.bank_accounts || [], 'bank_account_id');
+      setLoanSelectValue(document.getElementById('loanWithdrawBank'), bankLookup[source?.withdraw_bank_account_id] || source?.withdraw_bank_account_id || '');
+      loanDeleteButton.classList.remove('is-hidden');
+      updateLoanCalculation();
+      openLoanModal();
+    };
+    const saveLoanModal = async () => {
+      if (!window.HouseholdBudgetDB?.getApiUrl()) throw new Error('Google Sheets 연동 URL이 필요합니다.');
+      const title = document.getElementById('loanName').value.trim();
+      const companyName = document.getElementById('loanBank').value;
+      const withdrawBankName = document.getElementById('loanWithdrawBank').value;
+      const startDate = document.getElementById('loanStartDate').value;
+      const principal = parseMoney(document.getElementById('loanPrincipal').value);
+      const annualRate = (Number(String(document.getElementById('loanRate').value).replace(/[^0-9.-]/g, '')) || 0) / 100;
+      const termMonths = parseLoanTermMonths(document.getElementById('loanTermMonths').value);
+      const actualPayment = parseMoney(document.getElementById('loanActualPayment').value);
+      if (!title || !companyName || !startDate || !principal || !termMonths) throw new Error('항목, 금융기관, 실행일, 원금, 대출 기간을 확인해주세요.');
+      const now = new Date().toISOString().slice(0, 10);
+      await HouseholdBudgetDB.upsert('loans', {
+        ...(currentLoanEdit?.source || {}),
+        loan_id: currentLoanEdit?.id || undefined,
+        title,
+        loan_company_id: findMasterIdByName(latestLoanSnapshot?.master.loan_companies || [], 'loan_company_id', companyName),
+        withdraw_bank_account_id: findMasterIdByName(latestLoanSnapshot?.master.bank_accounts || [], 'bank_account_id', withdrawBankName),
+        start_date: startDate,
+        principal,
+        annual_rate: annualRate,
+        term_months: termMonths,
+        repayment_type: repaymentTypeValue(document.getElementById('loanPaymentType').value),
+        status: statusValue(document.getElementById('loanStatus').value),
+        memo: mergeActualPaymentMemo(currentLoanEdit?.source?.memo || '', actualPayment),
+        created_at: currentLoanEdit?.source?.created_at || now,
+      });
+      await HouseholdBudgetDB.refreshPage();
+      closeLoanModal();
+    };
+    const deleteCurrentLoan = async () => {
+      if (!currentLoanEdit?.id) return;
+      await HouseholdBudgetDB.remove('loans', currentLoanEdit.id);
+      await HouseholdBudgetDB.refreshPage();
+      closeLoanModal();
+    };
+
+    ['loanPrincipal', 'loanRate', 'loanStartDate', 'loanTermMonths', 'loanPaymentType'].forEach((id) => {
+      document.getElementById(id)?.addEventListener('input', updateLoanCalculation);
+      document.getElementById(id)?.addEventListener('change', updateLoanCalculation);
+    });
+    document.querySelector('.global-month select')?.addEventListener('change', () => {
+      updateLoanLedger();
+      updateLoanCalculation();
+      HouseholdBudgetDB.refreshPage();
+    });
+    loanBankFilter?.addEventListener('change', updateLoanLedger);
+
+    document.querySelector('.loan-modal-open')?.addEventListener('click', () => {
+      resetLoanModalForCreate();
+      openLoanModal();
+    });
+    document.querySelector('.loan-modal-close')?.addEventListener('click', () => {
+      closeLoanModal();
+    });
+    loanModal?.addEventListener('click', (event) => {
+      if (event.target === loanModal) {
+        closeLoanModal();
+      }
+    });
+    document.addEventListener('click', (event) => {
+      const button = event.target.closest('.loan-edit-trigger');
+      if (button) fillLoanModalFromRow(button);
+    });
+    loanModal.querySelector('.modal-actions .button.primary')?.addEventListener('click', async () => {
+      const button = loanModal.querySelector('.modal-actions .button.primary');
+      button.disabled = true;
+      button.textContent = '저장 중';
+      try {
+        await saveLoanModal();
+      } catch (error) {
+        alert(error.message || '저장에 실패했습니다.');
+      } finally {
+        button.disabled = false;
+        button.textContent = '저장';
+      }
+    });
+    window.__householdBudgetConfirmDelete = async () => {
+      if (loanModal.classList.contains('open')) await deleteCurrentLoan();
+    };
+    syncLoanDbOptions();
+    updateLoanLedger();
+    window.HouseholdBudgetDB?.hydratePage(renderLoanPage);
+  </script>
+<div class="modal-backdrop" id="deleteConfirmModal" aria-hidden="true">
+  <section class="modal confirm-modal" role="dialog" aria-modal="true" aria-labelledby="deleteConfirmTitle">
+    <div class="modal-head">
+      <h3 id="deleteConfirmTitle">삭제 확인</h3>
+      <button class="button delete-confirm-close" type="button">닫기</button>
+    </div>
+    <div class="modal-body">
+      <p class="note" id="deleteConfirmMessage">선택한 항목을 삭제할까요?</p>
+    </div>
+    <div class="modal-actions">
+      <button class="button delete-confirm-close" type="button">취소</button>
+      <button class="button danger" type="button" id="deleteConfirmAction">삭제</button>
+    </div>
+  </section>
+</div>
+
+<script>
+  (() => {
+    const deleteConfirmModal = document.getElementById("deleteConfirmModal");
+    const deleteConfirmMessage = document.getElementById("deleteConfirmMessage");
+    const closeDeleteConfirm = () => {
+      deleteConfirmModal.classList.remove("open");
+      deleteConfirmModal.setAttribute("aria-hidden", "true");
+    };
+
+    document.querySelectorAll("[data-confirm-delete]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const label = button.dataset.deleteLabel || "항목";
+        deleteConfirmMessage.textContent = `${label}을 삭제할까요?`;
+        deleteConfirmModal.classList.add("open");
+        deleteConfirmModal.setAttribute("aria-hidden", "false");
+      });
+    });
+
+    document.querySelectorAll(".delete-confirm-close").forEach((button) => {
+      button.addEventListener("click", closeDeleteConfirm);
+    });
+
+    document.getElementById("deleteConfirmAction").addEventListener("click", async () => {
+      if (typeof window.__householdBudgetConfirmDelete === "function") {
+        await window.__householdBudgetConfirmDelete();
+      }
+      closeDeleteConfirm();
+    });
+    deleteConfirmModal.addEventListener("click", (event) => {
+      if (event.target === deleteConfirmModal) closeDeleteConfirm();
+    });
+  })();
+</script>
+</body>
+</html>

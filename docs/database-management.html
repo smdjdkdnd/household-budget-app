@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>가계부 - DB 관리</title>
+  <link rel="stylesheet" href="household-budget.css?v=9">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="app-icon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#2563eb">
+  <script src="household-budget-db.js?v=16"></script>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">
+          <h1>가계부</h1>
+          <p>정산월 기준 관리</p>
+        </div>
+        <label class="global-month">
+          <span>정산월</span>
+          <select name="globalSettlementMonth" aria-label="정산월 선택">
+            <option>2026년 12월</option>
+            <option>2026년 11월</option>
+            <option>2026년 10월</option>
+            <option>2026년 9월</option>
+            <option>2026년 8월</option>
+            <option selected>2026년 7월</option>
+            <option>2026년 6월</option>
+            <option>2026년 5월</option>
+            <option>2026년 4월</option>
+            <option>2026년 3월</option>
+            <option>2026년 2월</option>
+            <option>2026년 1월</option>
+          </select>
+        </label>
+      </div>
+      <nav class="nav">
+        <a href="household-budget-planning.html">대시보드</a>
+        <a href="expense-management.html">지출 관리</a>
+        <a href="budget-management.html">예산 관리</a>
+        <a href="loan-management.html">대출 관리</a>
+        <a href="reserve-management.html">비상금 관리</a>
+        <a class="active" href="database-management.html">DB 관리</a>
+      </nav>
+    </aside>
+    <div class="content">
+      <header class="topbar">
+        <div><h2>DB 관리</h2></div>
+      </header>
+      <main>
+        <div class="grid">
+          <section class="card span-12 db-flow-card">
+            <div>
+              <h3>Google Sheets 연동</h3>
+              <p id="dbConnectionStatus">연동 URL 미설정</p>
+            </div>
+            <div class="db-connect">
+              <input class="control" id="dbApiUrl" placeholder="Apps Script Web App URL">
+              <input class="control" id="dbApiToken" placeholder="API token">
+              <button class="button primary" type="button" id="saveDbApiUrl">저장</button>
+            </div>
+          </section>
+          <section class="card span-12">
+            <div class="card-head">
+              <h3>카드사</h3>
+              <button class="button primary db-modal-open" type="button" data-db-kind="카드사">등록</button>
+            </div>
+            <table>
+              <thead><tr><th>카드사</th><th>연결 은행</th><th>결제일</th><th>정산 규칙</th><th>상태</th></tr></thead>
+              <tbody>
+                <tr data-db-kind="카드사" data-name="현대카드" data-bank="현대" data-payment-day="15" data-settlement-rule="사용 다음 달" data-status="사용"><td><button class="link-button db-edit-button" type="button">현대카드</button></td><td>현대</td><td>15일</td><td>사용 다음 달</td><td><span class="badge green">사용</span></td></tr>
+                <tr data-db-kind="카드사" data-name="국민카드" data-bank="국민" data-payment-day="15" data-settlement-rule="사용 다음 달" data-status="사용"><td><button class="link-button db-edit-button" type="button">국민카드</button></td><td>국민</td><td>15일</td><td>사용 다음 달</td><td><span class="badge green">사용</span></td></tr>
+                <tr data-db-kind="카드사" data-name="삼성카드" data-bank="삼성" data-payment-day="15" data-settlement-rule="사용 다음 달" data-status="사용"><td><button class="link-button db-edit-button" type="button">삼성카드</button></td><td>삼성</td><td>15일</td><td>사용 다음 달</td><td><span class="badge green">사용</span></td></tr>
+              </tbody>
+            </table>
+          </section>
+          <section class="card span-12">
+            <div class="card-head">
+              <h3>은행/계좌</h3>
+              <button class="button primary db-modal-open" type="button" data-db-kind="은행/계좌">등록</button>
+            </div>
+            <table>
+              <thead><tr><th>은행/계좌</th><th>상태</th></tr></thead>
+              <tbody id="bankAccountRows">
+                <tr data-db-kind="은행/계좌" data-name="국민" data-status="사용"><td><button class="link-button db-edit-button" type="button">국민</button></td><td><span class="badge green">사용</span></td></tr>
+                <tr data-db-kind="은행/계좌" data-name="카카오" data-status="사용"><td><button class="link-button db-edit-button" type="button">카카오</button></td><td><span class="badge green">사용</span></td></tr>
+                <tr data-db-kind="은행/계좌" data-name="토스" data-status="사용"><td><button class="link-button db-edit-button" type="button">토스</button></td><td><span class="badge green">사용</span></td></tr>
+              </tbody>
+            </table>
+          </section>
+          <section class="card span-12">
+            <div class="card-head">
+              <h3>대출 금융사</h3>
+              <button class="button primary db-modal-open" type="button" data-db-kind="대출 금융사">등록</button>
+            </div>
+            <table>
+              <thead><tr><th>금융사</th><th>연결 은행</th><th>출금일</th><th>상태</th></tr></thead>
+              <tbody>
+                <tr data-db-kind="대출 금융사" data-name="국민" data-bank="국민" data-payment-day="15" data-settlement-rule="사용 당월" data-status="사용"><td><button class="link-button db-edit-button" type="button">국민</button></td><td>국민</td><td>15일</td><td><span class="badge green">사용</span></td></tr>
+                <tr data-db-kind="대출 금융사" data-name="토스" data-bank="토스" data-payment-day="25" data-settlement-rule="사용 당월" data-status="사용"><td><button class="link-button db-edit-button" type="button">토스</button></td><td>토스</td><td>25일</td><td><span class="badge green">사용</span></td></tr>
+                <tr data-db-kind="대출 금융사" data-name="경남" data-bank="국민" data-payment-day="20" data-settlement-rule="사용 당월" data-status="사용"><td><button class="link-button db-edit-button" type="button">경남</button></td><td>국민</td><td>20일</td><td><span class="badge green">사용</span></td></tr>
+              </tbody>
+            </table>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="dbModal" aria-hidden="true">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="dbModalTitle">
+      <div class="modal-head">
+        <h3 id="dbModalTitle">DB 항목 등록</h3>
+        <button class="button db-modal-close" type="button">닫기</button>
+      </div>
+      <div class="modal-body">
+        <input id="dbKind" type="hidden">
+        <div class="form-grid db-form-grid">
+          <div class="form-span-2">
+            <label for="dbName">항목명</label>
+            <input class="control" id="dbName">
+          </div>
+          <div class="form-span-2" id="dbBankField">
+            <label for="dbBank" id="dbBankLabel">연결 은행</label>
+            <select class="control" id="dbBank">
+              <option value="">선택</option>
+            </select>
+          </div>
+          <div class="form-span-2" id="dbSettlementRuleField">
+            <label for="dbSettlementRule">정산 규칙</label>
+            <select class="control" id="dbSettlementRule">
+              <option value="">선택</option>
+              <option>사용 다음 달</option>
+              <option>사용 당월</option>
+              <option>직접 선택</option>
+            </select>
+          </div>
+          <div class="form-span-2">
+            <label for="dbStatus">상태</label>
+            <select class="control" id="dbStatus">
+              <option>사용</option>
+              <option>미사용</option>
+            </select>
+          </div>
+          <div class="form-span-2" id="dbPaymentDayField">
+            <label for="dbPaymentDay">결제/출금일</label>
+            <input class="control" id="dbPaymentDay" type="number" min="1" max="31">
+          </div>
+          <div class="conditional-panel">
+            <label for="dbMemo">메모</label>
+            <input class="control" id="dbMemo">
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="button danger db-delete-button is-hidden" type="button" data-confirm-delete data-delete-label="DB 항목">삭제</button>
+        <button class="button db-modal-close" type="button">취소</button>
+        <button class="button primary" type="button">저장</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const dbModal = document.getElementById("dbModal");
+    const dbDeleteButton = document.querySelector(".db-delete-button");
+    const dbKind = document.getElementById("dbKind");
+    const dbName = document.getElementById("dbName");
+    const dbBankField = document.getElementById("dbBankField");
+    const dbBank = document.getElementById("dbBank");
+    const dbPaymentDay = document.getElementById("dbPaymentDay");
+    const dbPaymentDayField = document.getElementById("dbPaymentDayField");
+    const dbSettlementRuleField = document.getElementById("dbSettlementRuleField");
+    const dbSettlementRule = document.getElementById("dbSettlementRule");
+    const dbStatus = document.getElementById("dbStatus");
+    const dbMemo = document.getElementById("dbMemo");
+    const dbApiUrl = document.getElementById("dbApiUrl");
+    const dbApiToken = document.getElementById("dbApiToken");
+    const dbConnectionStatus = document.getElementById("dbConnectionStatus");
+    let latestDbSnapshot = null;
+    let currentDbEdit = null;
+
+    function syncDbConnectionStatus() {
+      const url = window.HouseholdBudgetDB?.getApiUrl() || "";
+      const token = window.HouseholdBudgetDB?.getApiToken() || "";
+      dbApiUrl.value = url;
+      dbApiToken.value = token;
+      dbConnectionStatus.textContent = url ? "연동 URL 저장됨" : "연동 URL 미설정";
+    }
+
+    document.getElementById("saveDbApiUrl").addEventListener("click", async () => {
+      window.HouseholdBudgetDB?.setApiUrl(dbApiUrl.value);
+      window.HouseholdBudgetDB?.setApiToken(dbApiToken.value);
+      syncDbConnectionStatus();
+      if (window.HouseholdBudgetDB?.getApiUrl()) {
+        try {
+          await HouseholdBudgetDB.hydratePage(renderDbManagement);
+          dbConnectionStatus.textContent = "연동 확인 완료";
+        } catch (error) {
+          dbConnectionStatus.textContent = "연동 확인 실패";
+          console.error(error);
+        }
+      }
+    });
+
+    syncDbConnectionStatus();
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function lookupBy(rows, idKey, valueKey = "name") {
+      return rows.reduce((lookup, row) => {
+        lookup[row[idKey]] = row[valueKey];
+        return lookup;
+      }, {});
+    }
+
+    function settlementRuleLabel(value) {
+      if (value === "used_next_month") return "사용 다음 달";
+      if (value === "same_month") return "사용 당월";
+      if (value === "manual") return "직접 선택";
+      return value || "-";
+    }
+
+    function settlementRuleValue(label) {
+      if (label === "사용 다음 달") return "used_next_month";
+      if (label === "사용 당월") return "same_month";
+      if (label === "직접 선택") return "manual";
+      return label || "";
+    }
+
+    function statusBadge(status) {
+      const value = status || "사용";
+      return `<span class="badge ${value === "사용" ? "green" : "red"}">${escapeHtml(value)}</span>`;
+    }
+
+    function sectionBody(title) {
+      return Array.from(document.querySelectorAll(".card"))
+        .find((section) => section.querySelector("h3")?.textContent.trim() === title)
+        ?.querySelector("tbody");
+    }
+
+    function renderDbManagement(snapshot) {
+      latestDbSnapshot = snapshot;
+      const bankLookup = lookupBy(snapshot.master.bank_accounts, "bank_account_id");
+      const cardBody = sectionBody("카드사");
+      const bankBody = document.getElementById("bankAccountRows");
+      const loanBody = sectionBody("대출 금융사");
+
+      if (cardBody) {
+        cardBody.innerHTML = snapshot.master.cards.map((row) => {
+          const bank = bankLookup[row.linked_bank_account_id] || row.linked_bank_account_id || "";
+          const rule = settlementRuleLabel(row.settlement_rule);
+          return `<tr data-id="${escapeHtml(row.card_id || "")}" data-db-kind="카드사" data-name="${escapeHtml(row.name)}" data-bank="${escapeHtml(bank)}" data-payment-day="${escapeHtml(row.payment_day || "")}" data-settlement-rule="${escapeHtml(rule)}" data-status="${escapeHtml(row.status || "사용")}"><td><button class="link-button db-edit-button" type="button">${escapeHtml(row.name)}</button></td><td>${escapeHtml(bank)}</td><td>${row.payment_day ? `${row.payment_day}일` : "-"}</td><td>${escapeHtml(rule)}</td><td>${statusBadge(row.status)}</td></tr>`;
+        }).join("");
+      }
+
+      if (bankBody) {
+        bankBody.innerHTML = snapshot.master.bank_accounts.map((row) => {
+          return `<tr data-id="${escapeHtml(row.bank_account_id || "")}" data-db-kind="은행/계좌" data-name="${escapeHtml(row.name)}" data-status="${escapeHtml(row.status || "사용")}"><td><button class="link-button db-edit-button" type="button">${escapeHtml(row.name)}</button></td><td>${statusBadge(row.status)}</td></tr>`;
+        }).join("");
+      }
+
+      if (loanBody) {
+        loanBody.innerHTML = snapshot.master.loan_companies.map((row) => {
+          const bank = bankLookup[row.linked_bank_account_id] || row.linked_bank_account_id || "";
+          return `<tr data-id="${escapeHtml(row.loan_company_id || "")}" data-db-kind="대출 금융사" data-name="${escapeHtml(row.name)}" data-bank="${escapeHtml(bank)}" data-payment-day="${escapeHtml(row.withdraw_day || "")}" data-settlement-rule="" data-status="${escapeHtml(row.status || "사용")}"><td><button class="link-button db-edit-button" type="button">${escapeHtml(row.name)}</button></td><td>${escapeHtml(bank)}</td><td>${row.withdraw_day ? `${row.withdraw_day}일` : "-"}</td><td>${statusBadge(row.status)}</td></tr>`;
+        }).join("");
+      }
+    }
+
+    function getBankAccountOptions() {
+      return Array.from(document.querySelectorAll("#bankAccountRows tr"))
+        .filter((row) => row.dataset.status === "사용")
+        .map((row) => row.dataset.name)
+        .filter(Boolean);
+    }
+
+    function setDbSelectValue(select, value) {
+      const option = Array.from(select.options).find((item) => item.value === value || item.textContent.trim() === value);
+      if (option) select.value = option.value;
+    }
+
+    function syncBankOptions(kind, selectedValue = "") {
+      const options = kind === "은행/계좌" ? [selectedValue].filter(Boolean) : getBankAccountOptions();
+      dbBank.innerHTML = `<option value="">선택</option>${options.map((name) => `<option>${name}</option>`).join("")}`;
+      setDbSelectValue(dbBank, selectedValue);
+    }
+
+    function syncDbModalFields(kind) {
+      const isLoanCompany = kind === "대출 금융사";
+      const isBankAccount = kind === "은행/계좌";
+      dbBankField.classList.toggle("is-hidden", isBankAccount);
+      dbPaymentDayField.classList.toggle("is-hidden", isBankAccount);
+      document.getElementById("dbBankLabel").textContent = "연결 은행";
+      dbSettlementRuleField.classList.toggle("is-hidden", isLoanCompany || isBankAccount);
+      if (isLoanCompany || isBankAccount) {
+        setDbSelectValue(dbSettlementRule, "");
+      }
+    }
+
+    function clearDbModal(kind) {
+      currentDbEdit = null;
+      document.getElementById("dbModalTitle").textContent = `${kind} 등록`;
+      dbKind.value = kind;
+      dbName.value = "";
+      syncBankOptions(kind);
+      setDbSelectValue(dbBank, "");
+      dbPaymentDay.value = "";
+      setDbSelectValue(dbSettlementRule, "");
+      setDbSelectValue(dbStatus, "사용");
+      dbMemo.value = "";
+      dbDeleteButton.classList.add("is-hidden");
+      syncDbModalFields(kind);
+    }
+
+    function openDbModal() {
+      dbModal.classList.add("open");
+      dbModal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeDbModal() {
+      dbModal.classList.remove("open");
+      dbModal.setAttribute("aria-hidden", "true");
+    }
+
+    function fillDbModalFromRow(button) {
+      const row = button.closest("tr");
+      const kind = row.dataset.dbKind;
+      const id = row.dataset.id || "";
+      currentDbEdit = {
+        id,
+        table: tableForKind(kind),
+        source: findDbSource(kind, id)
+      };
+      document.getElementById("dbModalTitle").textContent = `${kind} 편집`;
+      dbKind.value = kind;
+      dbName.value = row.dataset.name || "";
+      syncBankOptions(kind, row.dataset.bank || "");
+      dbPaymentDay.value = row.dataset.paymentDay || "";
+      setDbSelectValue(dbSettlementRule, row.dataset.settlementRule || "");
+      setDbSelectValue(dbStatus, row.dataset.status || "사용");
+      dbMemo.value = "";
+      dbDeleteButton.classList.remove("is-hidden");
+      syncDbModalFields(kind);
+      openDbModal();
+    }
+
+    function tableForKind(kind) {
+      if (kind === "카드사") return "cards";
+      if (kind === "은행/계좌") return "bank_accounts";
+      return "loan_companies";
+    }
+
+    function idKeyForKind(kind) {
+      if (kind === "카드사") return "card_id";
+      if (kind === "은행/계좌") return "bank_account_id";
+      return "loan_company_id";
+    }
+
+    function findDbSource(kind, id) {
+      const table = kind === "카드사"
+        ? latestDbSnapshot?.master.cards
+        : kind === "은행/계좌"
+          ? latestDbSnapshot?.master.bank_accounts
+          : latestDbSnapshot?.master.loan_companies;
+      const idKey = idKeyForKind(kind);
+      return table?.find((row) => row[idKey] === id);
+    }
+
+    function bankIdByName(name) {
+      const normalized = String(name || "").trim();
+      return latestDbSnapshot?.master.bank_accounts.find((row) => row.name === normalized || row.bank_account_id === normalized)?.bank_account_id || normalized;
+    }
+
+    async function saveDbModal() {
+      if (!window.HouseholdBudgetDB?.getApiUrl()) throw new Error("Google Sheets 연동 URL이 필요합니다.");
+      const kind = dbKind.value;
+      const table = tableForKind(kind);
+      const idKey = idKeyForKind(kind);
+      const now = new Date().toISOString().slice(0, 10);
+      const base = {
+        ...(currentDbEdit?.source || {}),
+        [idKey]: currentDbEdit?.id || undefined,
+        name: dbName.value.trim(),
+        status: dbStatus.value || "사용",
+        memo: dbMemo.value,
+        created_at: currentDbEdit?.source?.created_at || now,
+      };
+      if (!base.name) throw new Error("항목명을 입력해주세요.");
+
+      if (kind === "카드사") {
+        Object.assign(base, {
+          linked_bank_account_id: bankIdByName(dbBank.value),
+          payment_day: dbPaymentDay.value,
+          settlement_rule: settlementRuleValue(dbSettlementRule.value),
+        });
+      } else if (kind === "은행/계좌") {
+        Object.assign(base, {});
+      } else {
+        Object.assign(base, {
+          linked_bank_account_id: bankIdByName(dbBank.value),
+          withdraw_day: dbPaymentDay.value,
+        });
+      }
+
+      await HouseholdBudgetDB.upsert(table, base);
+      await HouseholdBudgetDB.refreshPage();
+      closeDbModal();
+    }
+
+    async function deleteCurrentDbItem() {
+      if (!currentDbEdit?.id || !currentDbEdit?.table) return;
+      await HouseholdBudgetDB.remove(currentDbEdit.table, currentDbEdit.id);
+      await HouseholdBudgetDB.refreshPage();
+      closeDbModal();
+    }
+
+    document.querySelectorAll(".db-modal-open").forEach((button) => {
+      button.addEventListener("click", () => {
+        clearDbModal(button.dataset.dbKind);
+        openDbModal();
+      });
+    });
+
+    document.addEventListener("click", (event) => {
+      const button = event.target.closest(".db-edit-button");
+      if (button) fillDbModalFromRow(button);
+    });
+
+    document.querySelectorAll(".db-modal-close").forEach((button) => {
+      button.addEventListener("click", closeDbModal);
+    });
+    dbModal.querySelector(".modal-actions .button.primary").addEventListener("click", async () => {
+      const button = dbModal.querySelector(".modal-actions .button.primary");
+      button.disabled = true;
+      button.textContent = "저장 중";
+      try {
+        await saveDbModal();
+      } catch (error) {
+        alert(error.message || "저장에 실패했습니다.");
+      } finally {
+        button.disabled = false;
+        button.textContent = "저장";
+      }
+    });
+
+    dbModal.addEventListener("click", (event) => {
+      if (event.target === dbModal) closeDbModal();
+    });
+
+    window.HouseholdBudgetDB?.hydratePage(renderDbManagement);
+    window.__householdBudgetConfirmDelete = async () => {
+      if (dbModal.classList.contains("open")) await deleteCurrentDbItem();
+    };
+  </script>
+
+<div class="modal-backdrop" id="deleteConfirmModal" aria-hidden="true">
+  <section class="modal confirm-modal" role="dialog" aria-modal="true" aria-labelledby="deleteConfirmTitle">
+    <div class="modal-head">
+      <h3 id="deleteConfirmTitle">삭제 확인</h3>
+      <button class="button delete-confirm-close" type="button">닫기</button>
+    </div>
+    <div class="modal-body">
+      <p class="note" id="deleteConfirmMessage">선택한 항목을 삭제할까요?</p>
+    </div>
+    <div class="modal-actions">
+      <button class="button delete-confirm-close" type="button">취소</button>
+      <button class="button danger" type="button" id="deleteConfirmAction">삭제</button>
+    </div>
+  </section>
+</div>
+
+<script>
+  (() => {
+    const deleteConfirmModal = document.getElementById("deleteConfirmModal");
+    const deleteConfirmMessage = document.getElementById("deleteConfirmMessage");
+    const closeDeleteConfirm = () => {
+      deleteConfirmModal.classList.remove("open");
+      deleteConfirmModal.setAttribute("aria-hidden", "true");
+    };
+
+    document.querySelectorAll("[data-confirm-delete]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const label = button.dataset.deleteLabel || "항목";
+        deleteConfirmMessage.textContent = `${label}을 삭제할까요?`;
+        deleteConfirmModal.classList.add("open");
+        deleteConfirmModal.setAttribute("aria-hidden", "false");
+      });
+    });
+
+    document.querySelectorAll(".delete-confirm-close").forEach((button) => {
+      button.addEventListener("click", closeDeleteConfirm);
+    });
+
+    document.getElementById("deleteConfirmAction").addEventListener("click", async () => {
+      if (typeof window.__householdBudgetConfirmDelete === "function") {
+        await window.__householdBudgetConfirmDelete();
+      }
+      closeDeleteConfirm();
+    });
+    deleteConfirmModal.addEventListener("click", (event) => {
+      if (event.target === deleteConfirmModal) closeDeleteConfirm();
+    });
+  })();
+</script>
+</body>
+</html>
